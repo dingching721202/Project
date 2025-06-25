@@ -348,3 +348,26 @@ function resetGame() {
 }
 
 restartBtn.addEventListener('click', resetGame);
+
+// RWD：根據螢幕寬度自動調整 canvas 大小
+function resizeCanvas() {
+    const maxWidth = 550;
+    const maxHeight = 600;
+    // 以螢幕寬度為主，保留比例
+    let width = Math.min(window.innerWidth, maxWidth);
+    let height = Math.round(width * (maxHeight / maxWidth));
+    if (height > window.innerHeight - 40) {
+        height = window.innerHeight - 40;
+        width = Math.round(height * (maxWidth / maxHeight));
+    }
+    canvas.width = width;
+    canvas.height = height;
+}
+
+window.addEventListener('resize', () => {
+    resizeCanvas();
+    drawGame();
+});
+
+// 初始化時也執行一次
+resizeCanvas();
