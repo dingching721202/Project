@@ -349,23 +349,21 @@ function resetGame() {
 
 restartBtn.addEventListener('click', resetGame);
 
-// RWD：根據螢幕寬度自動調整 canvas 大小
+// 讓 canvas 尺寸根據螢幕寬度自動調整，並根據比例縮放所有繪圖
 function resizeCanvas() {
-    const maxWidth = 550;
-    const maxHeight = 600;
-    // 以螢幕寬度為主，保留比例
-    let width = Math.min(window.innerWidth, maxWidth);
-    let height = Math.round(width * (maxHeight / maxWidth));
-    if (height > window.innerHeight - 40) {
-        height = window.innerHeight - 40;
-        width = Math.round(height * (maxWidth / maxHeight));
-    }
-    canvas.width = width;
-    canvas.height = height;
+    // 以 550x600 為基準，等比例縮放
+    const maxW = Math.min(window.innerWidth * 0.98, 550);
+    const scale = maxW / 550;
+    canvas.width = 550 * scale;
+    canvas.height = 600 * scale;
+    canvas.style.width = `${canvas.width}px`;
+    canvas.style.height = `${canvas.height}px`;
+    return scale;
 }
 
+let globalScale = resizeCanvas();
 window.addEventListener('resize', () => {
-    resizeCanvas();
+    globalScale = resizeCanvas();
     drawGame();
 });
 
