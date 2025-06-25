@@ -6,33 +6,40 @@ const restartBtn = document.getElementById('restart-btn');
 
 // 設定遊戲原始設計尺寸（直向）
 const DESIGN_WIDTH = 1170;
-const DESIGN_HEIGHT = 2532;
+const DESIGN_HEIGHT = 2200; // 讓內容不會太長，適合手機直向
 canvas.width = DESIGN_WIDTH;
 canvas.height = DESIGN_HEIGHT;
 
-// 依新尺寸重設發射軌道與遊戲區域參數
-const LAUNCHER_WIDTH = 120;
-const GAME_AREA_WIDTH = canvas.width - LAUNCHER_WIDTH;
-const LAUNCHER_X = GAME_AREA_WIDTH;
-const LAUNCHER_Y_START = DESIGN_HEIGHT - 180; // 底部預留空間
-const LAUNCHER_Y_END = 180; // 頂部預留空間
-const MAX_PULL_DISTANCE = 800; // 拉桿可拉更長
-const ARC_RADIUS = 220; // 圓弧半徑加大
-const ARC_CENTER_X = LAUNCHER_X + LAUNCHER_WIDTH / 2;
-const ARC_CENTER_Y = LAUNCHER_Y_END + ARC_RADIUS + 60;
-const LAUNCHER_BASE_Y = LAUNCHER_Y_START - Math.floor((LAUNCHER_Y_START - LAUNCHER_Y_END) / 3) + 100;
+// 遊戲區域參數（內容置中，底部預留分數槽區域）
+const GAME_TOP = 120;
+const GAME_BOTTOM = DESIGN_HEIGHT - 260;
+const GAME_LEFT = 80;
+const GAME_RIGHT = DESIGN_WIDTH - 80;
+const GAME_WIDTH = GAME_RIGHT - GAME_LEFT;
+const GAME_HEIGHT = GAME_BOTTOM - GAME_TOP;
 
-// 釘子定義（依新尺寸重新排版，7排，每排間距約260px，左右邊界預留）
-const PEG_ROWS = 7;
+// 發射軌道參數
+const LAUNCHER_WIDTH = 120;
+const LAUNCHER_X = GAME_RIGHT - LAUNCHER_WIDTH;
+const LAUNCHER_Y_START = GAME_BOTTOM;
+const LAUNCHER_Y_END = GAME_TOP + 40;
+const MAX_PULL_DISTANCE = 500;
+const ARC_RADIUS = 180;
+const ARC_CENTER_X = LAUNCHER_X + LAUNCHER_WIDTH / 2;
+const ARC_CENTER_Y = LAUNCHER_Y_END + ARC_RADIUS + 30;
+const LAUNCHER_BASE_Y = LAUNCHER_Y_START - Math.floor((LAUNCHER_Y_START - LAUNCHER_Y_END) / 3) + 60;
+
+// 釘子定義（6排，每排間距約140px，左右邊界預留）
+const PEG_ROWS = 6;
 const PEG_COLS = 7;
 const PEG_RADIUS = 22;
-const PEG_X_START = 120;
-const PEG_X_END = GAME_AREA_WIDTH - 120;
-const PEG_Y_START = 400;
-const PEG_Y_GAP = 260;
+const PEG_X_START = GAME_LEFT + 40;
+const PEG_X_END = GAME_RIGHT - 40;
+const PEG_Y_START = GAME_TOP + 120;
+const PEG_Y_GAP = 140;
 let pegs = [];
 for (let row = 0; row < PEG_ROWS; row++) {
-    let cols = PEG_COLS - (row % 2); // 奇數排少一顆
+    let cols = PEG_COLS - (row % 2);
     let xGap = (PEG_X_END - PEG_X_START) / (cols - 1);
     let y = PEG_Y_START + row * PEG_Y_GAP;
     for (let col = 0; col < cols; col++) {
@@ -45,14 +52,14 @@ for (let row = 0; row < PEG_ROWS; row++) {
 const SCORE_ZONE_COUNT = 5;
 const SCORE_ZONE_HEIGHT = 120;
 const SCORE_ZONE_Y = DESIGN_HEIGHT - SCORE_ZONE_HEIGHT;
-const SCORE_ZONE_W = Math.floor(GAME_AREA_WIDTH / SCORE_ZONE_COUNT);
-const scoreZones = [
-    { x: 0, y: SCORE_ZONE_Y, w: SCORE_ZONE_W, h: SCORE_ZONE_HEIGHT, score: 100 },
-    { x: SCORE_ZONE_W, y: SCORE_ZONE_Y, w: SCORE_ZONE_W, h: SCORE_ZONE_HEIGHT, score: 50 },
-    { x: 2 * SCORE_ZONE_W, y: SCORE_ZONE_Y, w: SCORE_ZONE_W, h: SCORE_ZONE_HEIGHT, score: 20 },
-    { x: 3 * SCORE_ZONE_W, y: SCORE_ZONE_Y, w: SCORE_ZONE_W, h: SCORE_ZONE_HEIGHT, score: 10 },
-    { x: 4 * SCORE_ZONE_W, y: SCORE_ZONE_Y, w: SCORE_ZONE_W, h: SCORE_ZONE_HEIGHT, score: 0 },
-];
+const SCORE_ZONE_W = Math.floor(GAME_WIDTH / SCORE_ZONE_COUNT);
+const scoreZones = Array.from({ length: SCORE_ZONE_COUNT }, (_, i) => ({
+    x: GAME_LEFT + i * SCORE_ZONE_W,
+    y: SCORE_ZONE_Y,
+    w: SCORE_ZONE_W,
+    h: SCORE_ZONE_HEIGHT,
+    score: [100, 50, 20, 10, 0][i]
+}));
 
 // 彈珠對象
 class Ball {
@@ -63,12 +70,12 @@ class Ball {
         this.color = color;
         this.vx = 0;
         this.vy = 0;
-        this.gravity = 1.2; // 維持較大重力
+        this.gravity = 2.2; // 依新尺寸調整重力
         this.friction = 0.98;
-        this.restitution = 0.45; // 降低彈性，彈跳不會太快
+        this.restitution = 0.45;
         this.inLauncher = true;
-        this.inArc = false; // 是否在圓弧導軌
-        this.inPlay = false; // 是否進入釘子區
+        this.inArc = false;
+        this.inPlay = false;
     }
 
     draw() {
@@ -207,36 +214,36 @@ let gameRunning = false;
 let isDragging = false;
 let startY = 0;
 let pullDistance = 0;
-let ball = new Ball(LAUNCHER_X + LAUNCHER_WIDTH / 2, LAUNCHER_BASE_Y, 10, '#555'); // 彈珠初始位置上移
+let ball = new Ball(LAUNCHER_X + LAUNCHER_WIDTH / 2, LAUNCHER_BASE_Y, 28, '#555'); // 彈珠半徑放大
 let ballsLeft = 10;
 
 // drawGame 內釘子、分數槽繪製不變，會自動依新座標顯示
 
 function drawGame() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    // 發射軌道直線
-    ctx.fillStyle = '#e9d7b7'; // 淡木色
-    ctx.fillRect(LAUNCHER_X + LAUNCHER_WIDTH * 0.25, LAUNCHER_Y_END, LAUNCHER_WIDTH * 0.5, LAUNCHER_Y_START - LAUNCHER_Y_END);
-    // 外框
+    // 遊戲主區域外框
     ctx.save();
     ctx.strokeStyle = '#e0c9a6';
-    ctx.lineWidth = 16;
-    ctx.strokeRect(0, 0, canvas.width, canvas.height);
+    ctx.lineWidth = 18;
+    ctx.strokeRect(GAME_LEFT, GAME_TOP, GAME_WIDTH, GAME_HEIGHT + 40);
     ctx.restore();
+    // 發射軌道直線
+    ctx.fillStyle = '#e9d7b7';
+    ctx.fillRect(LAUNCHER_X + LAUNCHER_WIDTH * 0.25, LAUNCHER_Y_END, LAUNCHER_WIDTH * 0.5, LAUNCHER_Y_START - LAUNCHER_Y_END);
     // 發射器區域的左側邊界
     ctx.beginPath();
-    ctx.moveTo(GAME_AREA_WIDTH, 0);
-    ctx.lineTo(GAME_AREA_WIDTH, canvas.height);
+    ctx.moveTo(LAUNCHER_X, GAME_TOP);
+    ctx.lineTo(LAUNCHER_X, GAME_BOTTOM);
     ctx.strokeStyle = '#e0c9a6';
-    ctx.lineWidth = 6;
+    ctx.lineWidth = 8;
     ctx.stroke();
-    // 拉桿（在彈珠下方，隨拉動移動）
+    // 拉桿
     if (ball && ball.inLauncher) {
-        ctx.fillStyle = '#d2b48c'; // 木色
-        ctx.fillRect(LAUNCHER_X + LAUNCHER_WIDTH / 2 - 12, ball.y + ball.r + 5, 24, 36);
+        ctx.fillStyle = '#d2b48c';
+        ctx.fillRect(LAUNCHER_X + LAUNCHER_WIDTH / 2 - 22, ball.y + ball.r + 10, 44, 80);
         ctx.strokeStyle = '#a67c52';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(LAUNCHER_X + LAUNCHER_WIDTH / 2 - 12, ball.y + ball.r + 5, 24, 36);
+        ctx.lineWidth = 5;
+        ctx.strokeRect(LAUNCHER_X + LAUNCHER_WIDTH / 2 - 22, ball.y + ball.r + 10, 44, 80);
     }
     // 釘子
     ctx.fillStyle = '#e0c9a6';
@@ -245,21 +252,21 @@ function drawGame() {
         ctx.beginPath();
         ctx.arc(peg.x, peg.y, peg.r, 0, Math.PI * 2);
         ctx.fill();
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 3;
         ctx.stroke();
         ctx.closePath();
     });
     // 分數槽
     scoreZones.forEach(zone => {
         ctx.strokeStyle = '#a67c52';
-        ctx.lineWidth = 3;
+        ctx.lineWidth = 5;
         ctx.strokeRect(zone.x, zone.y, zone.w, zone.h);
         ctx.fillStyle = '#e9d7b7';
         ctx.fillRect(zone.x, zone.y, zone.w, zone.h);
         ctx.fillStyle = '#a67c52';
-        ctx.font = '18px Arial';
+        ctx.font = '48px Arial';
         ctx.textAlign = 'center';
-        ctx.fillText(zone.score, zone.x + zone.w / 2, zone.y + zone.h / 2 + 7);
+        ctx.fillText(zone.score, zone.x + zone.w / 2, zone.y + zone.h / 2 + 24);
     });
     // 彈珠
     if (ball) {
