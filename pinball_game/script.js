@@ -10,19 +10,49 @@ const DESIGN_HEIGHT = 2532;
 canvas.width = DESIGN_WIDTH;
 canvas.height = DESIGN_HEIGHT;
 
-// 發射軌道參數
-const LAUNCHER_WIDTH = 50;
+// 依新尺寸重設發射軌道與遊戲區域參數
+const LAUNCHER_WIDTH = 120;
 const GAME_AREA_WIDTH = canvas.width - LAUNCHER_WIDTH;
 const LAUNCHER_X = GAME_AREA_WIDTH;
-const LAUNCHER_Y_START = 550;
-const LAUNCHER_Y_END = 50;
-const MAX_PULL_DISTANCE = 320; // 拉桿可拉更長
-const ARC_RADIUS = 90; // 圓弧半徑加大
+const LAUNCHER_Y_START = DESIGN_HEIGHT - 180; // 底部預留空間
+const LAUNCHER_Y_END = 180; // 頂部預留空間
+const MAX_PULL_DISTANCE = 800; // 拉桿可拉更長
+const ARC_RADIUS = 220; // 圓弧半徑加大
 const ARC_CENTER_X = LAUNCHER_X + LAUNCHER_WIDTH / 2;
-const ARC_CENTER_Y = LAUNCHER_Y_END + ARC_RADIUS + 20; // 圓心下移讓圓弧更圓滑
+const ARC_CENTER_Y = LAUNCHER_Y_END + ARC_RADIUS + 60;
+const LAUNCHER_BASE_Y = LAUNCHER_Y_START - Math.floor((LAUNCHER_Y_START - LAUNCHER_Y_END) / 3) + 100;
 
-// 計算發射軌道下方三分之一再往下 40px
-const LAUNCHER_BASE_Y = LAUNCHER_Y_START - Math.floor((LAUNCHER_Y_START - LAUNCHER_Y_END) / 3) + 40;
+// 釘子定義（依新尺寸重新排版，7排，每排間距約260px，左右邊界預留）
+const PEG_ROWS = 7;
+const PEG_COLS = 7;
+const PEG_RADIUS = 22;
+const PEG_X_START = 120;
+const PEG_X_END = GAME_AREA_WIDTH - 120;
+const PEG_Y_START = 400;
+const PEG_Y_GAP = 260;
+let pegs = [];
+for (let row = 0; row < PEG_ROWS; row++) {
+    let cols = PEG_COLS - (row % 2); // 奇數排少一顆
+    let xGap = (PEG_X_END - PEG_X_START) / (cols - 1);
+    let y = PEG_Y_START + row * PEG_Y_GAP;
+    for (let col = 0; col < cols; col++) {
+        let x = PEG_X_START + col * xGap + (row % 2 ? xGap / 2 : 0);
+        pegs.push({ x, y, r: PEG_RADIUS });
+    }
+}
+
+// 分數槽定義（底部5格，寬度等分）
+const SCORE_ZONE_COUNT = 5;
+const SCORE_ZONE_HEIGHT = 120;
+const SCORE_ZONE_Y = DESIGN_HEIGHT - SCORE_ZONE_HEIGHT;
+const SCORE_ZONE_W = Math.floor(GAME_AREA_WIDTH / SCORE_ZONE_COUNT);
+const scoreZones = [
+    { x: 0, y: SCORE_ZONE_Y, w: SCORE_ZONE_W, h: SCORE_ZONE_HEIGHT, score: 100 },
+    { x: SCORE_ZONE_W, y: SCORE_ZONE_Y, w: SCORE_ZONE_W, h: SCORE_ZONE_HEIGHT, score: 50 },
+    { x: 2 * SCORE_ZONE_W, y: SCORE_ZONE_Y, w: SCORE_ZONE_W, h: SCORE_ZONE_HEIGHT, score: 20 },
+    { x: 3 * SCORE_ZONE_W, y: SCORE_ZONE_Y, w: SCORE_ZONE_W, h: SCORE_ZONE_HEIGHT, score: 10 },
+    { x: 4 * SCORE_ZONE_W, y: SCORE_ZONE_Y, w: SCORE_ZONE_W, h: SCORE_ZONE_HEIGHT, score: 0 },
+];
 
 // 彈珠對象
 class Ball {
@@ -180,34 +210,7 @@ let pullDistance = 0;
 let ball = new Ball(LAUNCHER_X + LAUNCHER_WIDTH / 2, LAUNCHER_BASE_Y, 10, '#555'); // 彈珠初始位置上移
 let ballsLeft = 10;
 
-// 釘子定義 (x, y, radius) - 調整 x 座標以適應新的畫布寬度，並重新佈局以更像圖片
-const pegs = [
-    // 頂部弧形區域下方的第一排釘子 (更分散)
-    { x: 50, y: 100, r: 5 }, { x: 150, y: 100, r: 5 }, { x: 250, y: 100, r: 5 }, { x: 350, y: 100, r: 5 }, { x: 450, y: 100, r: 5 },
-    // 第二排
-    { x: 75, y: 150, r: 5 }, { x: 175, y: 150, r: 5 }, { x: 275, y: 150, r: 5 }, { x: 375, y: 150, r: 5 },
-    // 第三排
-    { x: 50, y: 200, r: 5 }, { x: 150, y: 200, r: 5 }, { x: 250, y: 200, r: 5 }, { x: 350, y: 200, r: 5 }, { x: 450, y: 200, r: 5 },
-    // 第四排
-    { x: 75, y: 250, r: 5 }, { x: 175, y: 250, r: 5 }, { x: 275, y: 250, r: 5 }, { x: 375, y: 250, r: 5 },
-    // 第五排
-    { x: 50, y: 300, r: 5 }, { x: 150, y: 300, r: 5 }, { x: 250, y: 300, r: 5 }, { x: 350, y: 300, r: 5 }, { x: 450, y: 300, r: 5 },
-    // 第六排
-    { x: 75, y: 350, r: 5 }, { x: 175, y: 350, r: 5 }, { x: 275, y: 350, r: 5 }, { x: 375, y: 350, r: 5 },
-    // 第七排
-    { x: 50, y: 400, r: 5 }, { x: 150, y: 400, r: 5 }, { x: 250, y: 400, r: 5 }, { x: 350, y: 400, r: 5 }, { x: 450, y: 400, r: 5 },
-    // 第八排
-    { x: 75, y: 450, r: 5 }, { x: 175, y: 450, r: 5 }, { x: 275, y: 450, r: 5 }, { x: 375, y: 450, r: 5 },
-];
-
-// 分數槽定義 (x, y, width, height, scoreValue) - 調整 x 座標和寬度
-const scoreZones = [
-    { x: 0, y: 550, w: 100, h: 40, score: 50 },
-    { x: 100, y: 550, w: 100, h: 40, score: 30 },
-    { x: 200, y: 550, w: 100, h: 40, score: 20 },
-    { x: 300, y: 550, w: 100, h: 40, score: 10 },
-    { x: 400, y: 550, w: 100, h: 40, score: 0 },
-];
+// drawGame 內釘子、分數槽繪製不變，會自動依新座標顯示
 
 function drawGame() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
