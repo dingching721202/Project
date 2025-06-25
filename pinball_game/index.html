@@ -1,19 +1,21 @@
 <!DOCTYPE html>
-<html lang="zh-Hant">
+<html lang="zh-TW">
 <head>
-  <meta charset="UTF-8">
-  <title>夜市彈珠台</title>
-  <link rel="stylesheet" href="style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台灣夜市彈珠台</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="info-bar">
-    <span>分數：<span id="score">0</span></span>
-    <span>剩餘彈珠：<span id="balls-left">10</span></span>
-    <button id="restart-btn">重新開始</button>
-  </div>
-  <div class="canvas-container">
-    <canvas id="gameCanvas"></canvas>
-  </div>
-  <script src="script.js"></script>
+    <div id="game-container">
+        <h1>台灣夜市彈珠台</h1>
+        <canvas id="gameCanvas"></canvas>
+        <div class="controls">
+            <p>分數: <span id="score">0</span></p>
+            <p>彈珠: <span id="balls-left">10</span></p>
+            <button id="restart-btn">重新開始</button>
+        </div>
+    </div>
+    <script src="script.js"></script>
 </body>
 </html>
