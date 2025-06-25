@@ -85,20 +85,29 @@ p {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
-        gap: 8px !important;
+        gap: 2vw !important;
         justify-content: center !important;
         align-items: center !important;
         width: 100% !important;
+        overflow-x: auto !important;
+        padding: 0 2vw !important;
+        box-sizing: border-box !important;
     }
     .controls p, .controls button {
         min-width: 0 !important;
         width: auto !important;
         flex: 0 1 auto !important;
         white-space: nowrap !important;
-        padding-left: 0 !important;
-        padding-right: 0 !important;
+        padding-left: 0.5em !important;
+        padding-right: 0.5em !important;
         margin: 0 !important;
         box-sizing: border-box !important;
+        font-size: 4vw !important;
+    }
+    .controls button {
+        padding: 0.5em 1em !important;
+        font-size: 4vw !important;
+        min-width: 60px !important;
     }
     h1 {
         font-size: 5vw;
