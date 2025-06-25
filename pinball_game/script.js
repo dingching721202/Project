@@ -40,7 +40,7 @@ class Ball {
 
     draw() {
         ctx.beginPath();
-        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+        ctx.arc(this.x * globalScale, this.y * globalScale, this.r * globalScale, 0, Math.PI * 2);
         ctx.fillStyle = this.color;
         ctx.fill();
         ctx.closePath();
@@ -209,51 +209,51 @@ const scoreZones = [
 function drawGame() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     // 發射軌道直線
-    ctx.fillStyle = '#e9d7b7'; // 淡木色
-    ctx.fillRect(LAUNCHER_X + LAUNCHER_WIDTH * 0.25, LAUNCHER_Y_END, LAUNCHER_WIDTH * 0.5, LAUNCHER_Y_START - LAUNCHER_Y_END);
+    ctx.fillStyle = '#e9d7b7';
+    ctx.fillRect((LAUNCHER_X + LAUNCHER_WIDTH * 0.25) * globalScale, LAUNCHER_Y_END * globalScale, LAUNCHER_WIDTH * 0.5 * globalScale, (LAUNCHER_Y_START - LAUNCHER_Y_END) * globalScale);
     // 外框
     ctx.save();
     ctx.strokeStyle = '#e0c9a6';
-    ctx.lineWidth = 16;
+    ctx.lineWidth = 16 * globalScale;
     ctx.strokeRect(0, 0, canvas.width, canvas.height);
     ctx.restore();
     // 發射器區域的左側邊界
     ctx.beginPath();
-    ctx.moveTo(GAME_AREA_WIDTH, 0);
-    ctx.lineTo(GAME_AREA_WIDTH, canvas.height);
+    ctx.moveTo(GAME_AREA_WIDTH * globalScale, 0);
+    ctx.lineTo(GAME_AREA_WIDTH * globalScale, canvas.height);
     ctx.strokeStyle = '#e0c9a6';
-    ctx.lineWidth = 6;
+    ctx.lineWidth = 6 * globalScale;
     ctx.stroke();
-    // 拉桿（在彈珠下方，隨拉動移動）
+    // 拉桿
     if (ball && ball.inLauncher) {
-        ctx.fillStyle = '#d2b48c'; // 木色
-        ctx.fillRect(LAUNCHER_X + LAUNCHER_WIDTH / 2 - 12, ball.y + ball.r + 5, 24, 36);
+        ctx.fillStyle = '#d2b48c';
+        ctx.fillRect((LAUNCHER_X + LAUNCHER_WIDTH / 2 - 12) * globalScale, (ball.y + ball.r + 5) * globalScale, 24 * globalScale, 36 * globalScale);
         ctx.strokeStyle = '#a67c52';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(LAUNCHER_X + LAUNCHER_WIDTH / 2 - 12, ball.y + ball.r + 5, 24, 36);
+        ctx.lineWidth = 3 * globalScale;
+        ctx.strokeRect((LAUNCHER_X + LAUNCHER_WIDTH / 2 - 12) * globalScale, (ball.y + ball.r + 5) * globalScale, 24 * globalScale, 36 * globalScale);
     }
     // 釘子
     ctx.fillStyle = '#e0c9a6';
     ctx.strokeStyle = '#a67c52';
     pegs.forEach(peg => {
         ctx.beginPath();
-        ctx.arc(peg.x, peg.y, peg.r, 0, Math.PI * 2);
+        ctx.arc(peg.x * globalScale, peg.y * globalScale, peg.r * globalScale, 0, Math.PI * 2);
         ctx.fill();
-        ctx.lineWidth = 2;
+        ctx.lineWidth = 2 * globalScale;
         ctx.stroke();
         ctx.closePath();
     });
     // 分數槽
     scoreZones.forEach(zone => {
         ctx.strokeStyle = '#a67c52';
-        ctx.lineWidth = 3;
-        ctx.strokeRect(zone.x, zone.y, zone.w, zone.h);
+        ctx.lineWidth = 3 * globalScale;
+        ctx.strokeRect(zone.x * globalScale, zone.y * globalScale, zone.w * globalScale, zone.h * globalScale);
         ctx.fillStyle = '#e9d7b7';
-        ctx.fillRect(zone.x, zone.y, zone.w, zone.h);
+        ctx.fillRect(zone.x * globalScale, zone.y * globalScale, zone.w * globalScale, zone.h * globalScale);
         ctx.fillStyle = '#a67c52';
-        ctx.font = '18px Arial';
+        ctx.font = `${18 * globalScale}px Arial`;
         ctx.textAlign = 'center';
-        ctx.fillText(zone.score, zone.x + zone.w / 2, zone.y + zone.h / 2 + 7);
+        ctx.fillText(zone.score, (zone.x + zone.w / 2) * globalScale, (zone.y + zone.h / 2 + 7) * globalScale);
     });
     // 彈珠
     if (ball) {
@@ -352,7 +352,7 @@ restartBtn.addEventListener('click', resetGame);
 // 讓 canvas 尺寸根據螢幕寬度自動調整，並根據比例縮放所有繪圖
 function resizeCanvas() {
     // 以 550x600 為基準，等比例縮放
-    const maxW = Math.min(window.innerWidth * 0.98, 550);
+    const maxW = Math.min(window.innerWidth, 550);
     const scale = maxW / 550;
     canvas.width = 550 * scale;
     canvas.height = 600 * scale;
@@ -366,6 +366,3 @@ window.addEventListener('resize', () => {
     globalScale = resizeCanvas();
     drawGame();
 });
-
-// 初始化時也執行一次
-resizeCanvas();
