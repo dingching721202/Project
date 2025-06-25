@@ -261,6 +261,15 @@ function drawGame() {
     }
 }
 
+// Ball 類別 draw() 也要乘 globalScale
+Ball.prototype.draw = function() {
+    ctx.beginPath();
+    ctx.arc(this.x * globalScale, this.y * globalScale, this.r * globalScale, 0, Math.PI * 2);
+    ctx.fillStyle = this.color;
+    ctx.fill();
+    ctx.closePath();
+};
+
 // 遊戲主循環
 function gameLoop() {
     if (gameRunning && ball) {
@@ -276,8 +285,8 @@ gameLoop();
 canvas.addEventListener('mousedown', (e) => {
     // 獲取滑鼠在 canvas 內的座標
     const rect = canvas.getBoundingClientRect();
-    const mouseX = e.clientX - rect.left;
-    const mouseY = e.clientY - rect.top;
+    const mouseX = (e.clientX - rect.left) / globalScale;
+    const mouseY = (e.clientY - rect.top) / globalScale;
 
     if (!gameRunning && mouseX > LAUNCHER_X && ballsLeft > 0 && ball && ball.inLauncher) {
         isDragging = true;
@@ -287,7 +296,7 @@ canvas.addEventListener('mousedown', (e) => {
 canvas.addEventListener('mousemove', (e) => {
     if (isDragging && ball && ball.inLauncher) {
         const rect = canvas.getBoundingClientRect();
-        const mouseY = e.clientY - rect.top;
+        const mouseY = (e.clientY - rect.top) / globalScale;
         pullDistance = Math.max(0, Math.min(mouseY - startY, MAX_PULL_DISTANCE));
         ball.y = LAUNCHER_BASE_Y + pullDistance;
     }
@@ -306,8 +315,8 @@ canvas.addEventListener('mouseup', () => {
 canvas.addEventListener('touchstart', (e) => {
     const rect = canvas.getBoundingClientRect();
     const touch = e.touches[0];
-    const touchX = touch.clientX - rect.left;
-    const touchY = touch.clientY - rect.top;
+    const touchX = (touch.clientX - rect.left) / globalScale;
+    const touchY = (touch.clientY - rect.top) / globalScale;
     if (!gameRunning && touchX > LAUNCHER_X && ballsLeft > 0 && ball && ball.inLauncher) {
         isDragging = true;
         startY = touchY;
@@ -318,7 +327,7 @@ canvas.addEventListener('touchmove', (e) => {
     if (isDragging && ball && ball.inLauncher) {
         const rect = canvas.getBoundingClientRect();
         const touch = e.touches[0];
-        const touchY = touch.clientY - rect.top;
+        const touchY = (touch.clientY - rect.top) / globalScale;
         pullDistance = Math.max(0, Math.min(touchY - startY, MAX_PULL_DISTANCE));
         ball.y = LAUNCHER_BASE_Y + pullDistance;
         e.preventDefault();
