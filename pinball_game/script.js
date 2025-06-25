@@ -4,30 +4,22 @@ const scoreDisplay = document.getElementById('score');
 const ballsLeftDisplay = document.getElementById('balls-left');
 const restartBtn = document.getElementById('restart-btn');
 
-// 設定遊戲原始設計尺寸（直向）
-const DESIGN_WIDTH = 1170;
-const DESIGN_HEIGHT = 2200; // 讓內容不會太長，適合手機直向
-canvas.width = DESIGN_WIDTH;
-canvas.height = DESIGN_HEIGHT;
-
-// 遊戲區域參數（內容置中，底部預留分數槽區域）
-const GAME_TOP = 120;
-const GAME_BOTTOM = DESIGN_HEIGHT - 260;
-const GAME_LEFT = 80;
-const GAME_RIGHT = DESIGN_WIDTH - 80;
-const GAME_WIDTH = GAME_RIGHT - GAME_LEFT;
-const GAME_HEIGHT = GAME_BOTTOM - GAME_TOP;
+canvas.width = 550; // 增加寬度以容納發射軌道和主遊戲區域
+canvas.height = 600;
 
 // 發射軌道參數
-const LAUNCHER_WIDTH = 120;
-const LAUNCHER_X = GAME_RIGHT - LAUNCHER_WIDTH;
-const LAUNCHER_Y_START = GAME_BOTTOM;
-const LAUNCHER_Y_END = GAME_TOP + 40;
-const MAX_PULL_DISTANCE = 500;
-const ARC_RADIUS = 180;
+const LAUNCHER_WIDTH = 50;
+const GAME_AREA_WIDTH = canvas.width - LAUNCHER_WIDTH;
+const LAUNCHER_X = GAME_AREA_WIDTH;
+const LAUNCHER_Y_START = 550;
+const LAUNCHER_Y_END = 50;
+const MAX_PULL_DISTANCE = 320; // 拉桿可拉更長
+const ARC_RADIUS = 90; // 圓弧半徑加大
 const ARC_CENTER_X = LAUNCHER_X + LAUNCHER_WIDTH / 2;
-const ARC_CENTER_Y = LAUNCHER_Y_END + ARC_RADIUS + 30;
-const LAUNCHER_BASE_Y = LAUNCHER_Y_START - Math.floor((LAUNCHER_Y_START - LAUNCHER_Y_END) / 3) + 60;
+const ARC_CENTER_Y = LAUNCHER_Y_END + ARC_RADIUS + 20; // 圓心下移讓圓弧更圓滑
+
+// 計算發射軌道下方三分之一再往下 40px
+const LAUNCHER_BASE_Y = LAUNCHER_Y_START - Math.floor((LAUNCHER_Y_START - LAUNCHER_Y_END) / 3) + 40;
 
 // 釘子定義（6排，每排間距約140px，左右邊界預留）
 const PEG_ROWS = 6;
