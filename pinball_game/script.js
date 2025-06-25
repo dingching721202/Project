@@ -4,8 +4,24 @@ const scoreDisplay = document.getElementById('score');
 const ballsLeftDisplay = document.getElementById('balls-left');
 const restartBtn = document.getElementById('restart-btn');
 
-canvas.width = 550; // 增加寬度以容納發射軌道和主遊戲區域
+
+// canvas 固定 550x600，內容座標不縮放，RWD 只靠 CSS
+canvas.width = 550;
 canvas.height = 600;
+
+// 滑鼠與觸控事件：螢幕座標自動換算成 canvas 內座標
+function getCanvasPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    let x, y;
+    if (e.touches) {
+        x = (e.touches[0].clientX - rect.left) * (canvas.width / rect.width);
+        y = (e.touches[0].clientY - rect.top) * (canvas.height / rect.height);
+    } else {
+        x = (e.clientX - rect.left) * (canvas.width / rect.width);
+        y = (e.clientY - rect.top) * (canvas.height / rect.height);
+    }
+    return { x, y };
+}
 
 // 發射軌道參數
 const LAUNCHER_WIDTH = 50;
@@ -40,7 +56,7 @@ class Ball {
 
     draw() {
         ctx.beginPath();
-        ctx.arc(this.x * globalScale, this.y * globalScale, this.r * globalScale, 0, Math.PI * 2);
+        ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
         ctx.fillStyle = this.color;
         ctx.fill();
         ctx.closePath();
@@ -210,50 +226,50 @@ function drawGame() {
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     // 發射軌道直線
     ctx.fillStyle = '#e9d7b7';
-    ctx.fillRect((LAUNCHER_X + LAUNCHER_WIDTH * 0.25) * globalScale, LAUNCHER_Y_END * globalScale, LAUNCHER_WIDTH * 0.5 * globalScale, (LAUNCHER_Y_START - LAUNCHER_Y_END) * globalScale);
+    ctx.fillRect((LAUNCHER_X + LAUNCHER_WIDTH * 0.25), LAUNCHER_Y_END, LAUNCHER_WIDTH * 0.5, (LAUNCHER_Y_START - LAUNCHER_Y_END));
     // 外框
     ctx.save();
     ctx.strokeStyle = '#e0c9a6';
-    ctx.lineWidth = 16 * globalScale;
+    ctx.lineWidth = 16;
     ctx.strokeRect(0, 0, canvas.width, canvas.height);
     ctx.restore();
     // 發射器區域的左側邊界
     ctx.beginPath();
-    ctx.moveTo(GAME_AREA_WIDTH * globalScale, 0);
-    ctx.lineTo(GAME_AREA_WIDTH * globalScale, canvas.height);
+    ctx.moveTo(GAME_AREA_WIDTH, 0);
+    ctx.lineTo(GAME_AREA_WIDTH, canvas.height);
     ctx.strokeStyle = '#e0c9a6';
-    ctx.lineWidth = 6 * globalScale;
+    ctx.lineWidth = 6;
     ctx.stroke();
     // 拉桿
     if (ball && ball.inLauncher) {
         ctx.fillStyle = '#d2b48c';
-        ctx.fillRect((LAUNCHER_X + LAUNCHER_WIDTH / 2 - 12) * globalScale, (ball.y + ball.r + 5) * globalScale, 24 * globalScale, 36 * globalScale);
+        ctx.fillRect((LAUNCHER_X + LAUNCHER_WIDTH / 2 - 12), (ball.y + ball.r + 5), 24, 36);
         ctx.strokeStyle = '#a67c52';
-        ctx.lineWidth = 3 * globalScale;
-        ctx.strokeRect((LAUNCHER_X + LAUNCHER_WIDTH / 2 - 12) * globalScale, (ball.y + ball.r + 5) * globalScale, 24 * globalScale, 36 * globalScale);
+        ctx.lineWidth = 3;
+        ctx.strokeRect((LAUNCHER_X + LAUNCHER_WIDTH / 2 - 12), (ball.y + ball.r + 5), 24, 36);
     }
     // 釘子
     ctx.fillStyle = '#e0c9a6';
     ctx.strokeStyle = '#a67c52';
     pegs.forEach(peg => {
         ctx.beginPath();
-        ctx.arc(peg.x * globalScale, peg.y * globalScale, peg.r * globalScale, 0, Math.PI * 2);
+        ctx.arc(peg.x, peg.y, peg.r, 0, Math.PI * 2);
         ctx.fill();
-        ctx.lineWidth = 2 * globalScale;
+        ctx.lineWidth = 2;
         ctx.stroke();
         ctx.closePath();
     });
     // 分數槽
     scoreZones.forEach(zone => {
         ctx.strokeStyle = '#a67c52';
-        ctx.lineWidth = 3 * globalScale;
-        ctx.strokeRect(zone.x * globalScale, zone.y * globalScale, zone.w * globalScale, zone.h * globalScale);
+        ctx.lineWidth = 3;
+        ctx.strokeRect(zone.x, zone.y, zone.w, zone.h);
         ctx.fillStyle = '#e9d7b7';
-        ctx.fillRect(zone.x * globalScale, zone.y * globalScale, zone.w * globalScale, zone.h * globalScale);
+        ctx.fillRect(zone.x, zone.y, zone.w, zone.h);
         ctx.fillStyle = '#a67c52';
-        ctx.font = `${18 * globalScale}px Arial`;
+        ctx.font = `${18}px Arial`;
         ctx.textAlign = 'center';
-        ctx.fillText(zone.score, (zone.x + zone.w / 2) * globalScale, (zone.y + zone.h / 2 + 7) * globalScale);
+        ctx.fillText(zone.score, (zone.x + zone.w / 2), (zone.y + zone.h / 2 + 7));
     });
     // 彈珠
     if (ball) {
@@ -264,7 +280,7 @@ function drawGame() {
 // Ball 類別 draw() 也要乘 globalScale
 Ball.prototype.draw = function() {
     ctx.beginPath();
-    ctx.arc(this.x * globalScale, this.y * globalScale, this.r * globalScale, 0, Math.PI * 2);
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
     ctx.fillStyle = this.color;
     ctx.fill();
     ctx.closePath();
@@ -282,12 +298,9 @@ function gameLoop() {
 // 開始遊戲循環
 gameLoop();
 
-canvas.addEventListener('mousedown', (e) => {
-    // 獲取滑鼠在 canvas 內的座標
-    const rect = canvas.getBoundingClientRect();
-    const mouseX = (e.clientX - rect.left) / globalScale;
-    const mouseY = (e.clientY - rect.top) / globalScale;
 
+canvas.addEventListener('mousedown', (e) => {
+    const { x: mouseX, y: mouseY } = getCanvasPos(e);
     if (!gameRunning && mouseX > LAUNCHER_X && ballsLeft > 0 && ball && ball.inLauncher) {
         isDragging = true;
         startY = mouseY;
@@ -295,8 +308,7 @@ canvas.addEventListener('mousedown', (e) => {
 });
 canvas.addEventListener('mousemove', (e) => {
     if (isDragging && ball && ball.inLauncher) {
-        const rect = canvas.getBoundingClientRect();
-        const mouseY = (e.clientY - rect.top) / globalScale;
+        const { y: mouseY } = getCanvasPos(e);
         pullDistance = Math.max(0, Math.min(mouseY - startY, MAX_PULL_DISTANCE));
         ball.y = LAUNCHER_BASE_Y + pullDistance;
     }
@@ -313,10 +325,7 @@ canvas.addEventListener('mouseup', () => {
     }
 });
 canvas.addEventListener('touchstart', (e) => {
-    const rect = canvas.getBoundingClientRect();
-    const touch = e.touches[0];
-    const touchX = (touch.clientX - rect.left) / globalScale;
-    const touchY = (touch.clientY - rect.top) / globalScale;
+    const { x: touchX, y: touchY } = getCanvasPos(e);
     if (!gameRunning && touchX > LAUNCHER_X && ballsLeft > 0 && ball && ball.inLauncher) {
         isDragging = true;
         startY = touchY;
@@ -325,9 +334,7 @@ canvas.addEventListener('touchstart', (e) => {
 });
 canvas.addEventListener('touchmove', (e) => {
     if (isDragging && ball && ball.inLauncher) {
-        const rect = canvas.getBoundingClientRect();
-        const touch = e.touches[0];
-        const touchY = (touch.clientY - rect.top) / globalScale;
+        const { y: touchY } = getCanvasPos(e);
         pullDistance = Math.max(0, Math.min(touchY - startY, MAX_PULL_DISTANCE));
         ball.y = LAUNCHER_BASE_Y + pullDistance;
         e.preventDefault();
