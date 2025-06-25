@@ -4,9 +4,9 @@ const scoreDisplay = document.getElementById('score');
 const ballsLeftDisplay = document.getElementById('balls-left');
 const restartBtn = document.getElementById('restart-btn');
 
-// 設定遊戲原始設計尺寸
-const DESIGN_WIDTH = 2532;
-const DESIGN_HEIGHT = 1170;
+// 設定遊戲原始設計尺寸（直向）
+const DESIGN_WIDTH = 1170;
+const DESIGN_HEIGHT = 2532;
 canvas.width = DESIGN_WIDTH;
 canvas.height = DESIGN_HEIGHT;
 
@@ -354,12 +354,12 @@ restartBtn.addEventListener('click', resetGame);
 
 // RWD：根據螢幕寬度自動調整 canvas 大小，並以設計尺寸為基準縮放
 function resizeCanvas() {
-    // 以寬度為主，保留比例
-    let width = Math.min(window.innerWidth, DESIGN_WIDTH);
-    let height = Math.round(width * (DESIGN_HEIGHT / DESIGN_WIDTH));
-    if (height > window.innerHeight - 40) {
-        height = window.innerHeight - 40;
-        width = Math.round(height * (DESIGN_WIDTH / DESIGN_HEIGHT));
+    // 以高度為主，保留比例，確保手機直向不會橫向捲軸
+    let height = Math.min(window.innerHeight, DESIGN_HEIGHT);
+    let width = Math.round(height * (DESIGN_WIDTH / DESIGN_HEIGHT));
+    if (width > window.innerWidth) {
+        width = window.innerWidth;
+        height = Math.round(width * (DESIGN_HEIGHT / DESIGN_WIDTH));
     }
     canvas.style.width = width + 'px';
     canvas.style.height = height + 'px';
