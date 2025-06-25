@@ -89,7 +89,7 @@ p {
         justify-content: center !important;
         align-items: center !important;
         width: 100% !important;
-        overflow-x: auto !important;
+        overflow-x: hidden !important;
         padding: 0 2vw !important;
         box-sizing: border-box !important;
     }
